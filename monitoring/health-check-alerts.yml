@@ -1,0 +1,104 @@
+groups:
+  - name: health-check-service
+    rules:
+      - alert: HealthCheckServiceDown
+        expr: up{job="health-check-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Health check service metrics endpoint is unavailable
+          description: Prometheus has failed to scrape the health check service for at least one minute.
+          runbook: RUNBOOK.md#health-check-service-stops-executing-checks
+
+      - alert: HealthCheckSchedulerStalled
+        expr: time() - health_check_scheduler_last_scan_timestamp_seconds > 30
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Health check scheduler has stopped scanning
+          description: The scheduler has not completed a database scan for over 30 seconds.
+          runbook: RUNBOOK.md#health-check-service-stops-executing-checks
+
+      - alert: HealthChecksStopped
+        expr: |
+          (active_monitored_endpoints > 0)
+          and
+          (
+            (health_check_last_completion_timestamp_seconds == 0)
+            or
+            (
+              time() - health_check_last_completion_timestamp_seconds
+              > 2 * health_check_max_endpoint_interval_seconds
+            )
+          )
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: No monitored endpoint checks are completing
+          description: At least one endpoint is registered, but no check has completed within twice the longest configured interval.
+          runbook: RUNBOOK.md#health-check-service-stops-executing-checks
+
+      - alert: HealthCheckSchedulerScanErrors
+        expr: increase(health_check_scheduler_scan_errors_total[5m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: Scheduler database scans are failing
+          description: One or more scheduler scans failed in the last five minutes.
+          runbook: RUNBOOK.md#health-check-service-stops-executing-checks
+
+      - alert: HealthCheckResultPersistenceErrors
+        expr: increase(health_check_persistence_errors_total[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: Health check results could not be persisted
+          description: One or more result database writes failed in the last five minutes.
+          runbook: RUNBOOK.md#health-check-service-stops-executing-checks
+
+      - alert: HealthCheckRetentionCleanupFailing
+        expr: increase(health_check_retention_cleanup_errors_total[1h]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: Health check result retention cleanup is failing
+          description: Expired result rows may be accumulating because one or more cleanup attempts failed.
+
+      - alert: MonitoredEndpointsUnhealthy
+        expr: unhealthy_monitored_endpoints > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: One or more monitored endpoints are unhealthy
+          description: The scheduler reports {{ $value }} unhealthy endpoint(s).
+
+      - alert: HealthCheckFailureRateHigh
+        expr: |
+          (
+            rate(health_checks_failed_total[5m])
+            / clamp_min(rate(health_checks_total[5m]), 0.001)
+          ) > 0.1
+          and increase(health_checks_total[5m]) >= 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Health check failure rate is above 10 percent
+          description: More than 10 percent of checks failed over the last five minutes.
+
+      - alert: HealthCheckLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(health_check_latency_ms_bucket[5m]))
+          ) > 2000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Health check p95 latency exceeds two seconds
+          description: The 95th percentile of HTTP health check latency has exceeded 2000ms for five minutes.

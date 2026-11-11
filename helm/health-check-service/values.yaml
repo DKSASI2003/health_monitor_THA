@@ -1,0 +1,47 @@
+replicaCount: 1
+
+image:
+  repository: health-check-service
+  tag: "0.1.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+app:
+  env:
+    schedulerEnabled: "true"
+    httpTimeoutSeconds: "5.0"
+    maxConcurrency: "20"
+    maxChecksPerSecond: "10"
+    checkResultRetentionDays: "30"
+
+postgresql:
+  image: postgres:16-alpine
+  database: healthcheck
+  username: postgres
+  password: local-dev-password
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
