@@ -1,14 +1,14 @@
 groups:
   - name: health-check-service
     rules:
-      - alert: HealthCheckServiceDown
+      - alert: HealthCheckMetricsScrapeFailed
         expr: up{job="health-check-service"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: Health check service metrics endpoint is unavailable
-          description: Prometheus has failed to scrape the health check service for at least one minute.
+          summary: Prometheus cannot scrape the health-check service metrics endpoint
+          description: Prometheus has failed to scrape /metrics for at least one minute; the cause may be service availability, network connectivity, or scrape configuration.
           runbook: RUNBOOK.md#health-check-service-stops-executing-checks
 
       - alert: HealthCheckSchedulerStalled

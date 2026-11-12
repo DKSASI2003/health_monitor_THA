@@ -4,7 +4,7 @@
 
 ### Alerts covered
 
-- `HealthCheckServiceDown`: Prometheus cannot scrape `/metrics`.
+- `HealthCheckMetricsScrapeFailed`: Prometheus cannot scrape `/metrics`; this may indicate service unavailability, a network problem, or incorrect scrape configuration.
 - `HealthCheckSchedulerStalled`: the scheduler has not completed a database scan for over 30 seconds.
 - `HealthChecksStopped`: endpoints are registered, but no result has been persisted within twice the longest configured check interval.
 - `HealthCheckSchedulerScanErrors`: the scheduler reported database scan failures.
