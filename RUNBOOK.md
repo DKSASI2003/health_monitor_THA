@@ -2,15 +2,6 @@
 
 ## Health check service stops executing checks
 
-### Alerts covered
-
-- `HealthCheckMetricsScrapeFailed`: Prometheus cannot scrape `/metrics`; this may indicate service unavailability, a network problem, or incorrect scrape configuration.
-- `HealthCheckSchedulerStalled`: the scheduler has not completed a database scan for over 30 seconds.
-- `HealthChecksStopped`: endpoints are registered, but no result has been persisted within twice the longest configured check interval.
-- `HealthCheckSchedulerScanErrors`: the scheduler reported database scan failures.
-- `HealthCheckResultPersistenceErrors`: writing check results to the database failed.
-- `HealthCheckRetentionCleanupFailing`: expired result cleanup failed and old rows may be accumulating.
-
 ### Impact
 
 Checks may be stale or missing. Endpoint current states and transition history may not reflect the targets' current health. The API may still be available even when background checks have stopped.
