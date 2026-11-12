@@ -112,14 +112,3 @@ The commands below assume the Helm release is named `health-check-service` and w
    ```
 5. Verify the Prometheus alerts resolve. If checks still do not resume, preserve pod descriptions, events, app/database logs, and metric output for diagnosis rather than repeatedly restarting.
 
-### Escalation
-
-Escalate with the alert name, time of last successful scheduler scan and persisted check, app/database logs around the failure, and whether `/ready` succeeds. Do not include `.env` contents or database credentials.
-
-## Alert thresholds and assumptions
-
-Rules are in `monitoring/health-check-alerts.yml`. The `HealthChecksStopped` alert compares the last persisted completion with twice the largest configured endpoint interval; this avoids paging just because a long-interval endpoint is not due yet. Scheduler stalling is detected independently of endpoint count. Prometheus must scrape the service using the job name `health-check-service` and load the rule file. `monitoring/prometheus.yml` is a starter scrape/rule configuration; configure your Prometheus/Alertmanager notification receivers separately.
-
-## Result retention
-
-Detailed health-check result rows are retained for `CHECK_RESULT_RETENTION_DAYS` (30 days by default). The scheduler performs cleanup approximately once per day, beginning 24 hours after startup. Cleanup only deletes rows from `health_check_results`; monitored endpoint records and state-transition history are retained. The deletion total and cleanup failures are exposed as `health_check_retention_deleted_results_total` and `health_check_retention_cleanup_errors_total`.
